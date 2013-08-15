@@ -1,9 +1,16 @@
-(ns configleaf.core
+(ns configsloth.core
   (:require [clojure.java.io :as io]
             [clojure.string :as string]
             [stencil.core :as stencil]
             [leiningen.core.project :as project])
   (:import java.util.Properties))
+
+(def ^:dynamic *default-extension* ".clj")
+
+(def ext-template-map
+  {".clj" "templates/configsloth-clj"
+   ".cljx" "templates/configsloth-cljx"
+   ".cljs" "templates/configsloth-cljs"})
 
 ;;
 ;; Functions that provide functionality independent of any one build tool.
@@ -12,10 +19,10 @@
 (defn read-current-profiles
   "Read the current profiles from the config file for the project
    at the given path. For example, if the argument is \"/home/david\", reads
-   \"/home/david/.configleaf/current\". .configleaf/current should contain a
+   \"/home/david/.configsloth/current\". .configsloth/current should contain a
    single form that lists the currently active profiles."
   [config-store-path]
-  (let [config-file (io/file config-store-path ".configleaf/current")]
+  (let [config-file (io/file config-store-path ".configsloth/current")]
     (when (and (.exists config-file)
                (.isFile config-file))
       (binding [*read-eval* false]
@@ -25,8 +32,8 @@
   "Store the given profiles as the new current profiles for the project
    at the given path."
   [config-store-path current-profiles]
-  (let [config-dir (io/file config-store-path ".configleaf")
-        config-file (io/file config-store-path ".configleaf/current")]
+  (let [config-dir (io/file config-store-path ".configsloth")
+        config-file (io/file config-store-path ".configsloth/current")]
     (if (not (and (.exists config-dir)
                   (.isDirectory config-dir)))
       (.mkdir config-dir))
@@ -75,13 +82,13 @@
 
 (defn unstickable-profiles
   "Return all of the sets of the name keys of basic profiles that
-   cannot be made sticky according to the :configleaf configuration
+   cannot be made sticky according to the :configsloth configuration
    key. Composite profiles are expanded away. Returns a set of the
    sets of basic keys that cannot be set sticky in combination."
    [project]
   (let [unstickable-profiles (into #{}
                                    (get-in project
-                                           [:configleaf :never-sticky]))]
+                                           [:configsloth :never-sticky]))]
     (into #{} (map (partial fully-expand-profile project)
                    unstickable-profiles))))
 
@@ -102,15 +109,14 @@
 (defn config-namespace
   "Get the namespace to put the profile info into, or use the default
    (which is cfg.current)."
-  [project]
-  (or (get-in project [:configleaf :namespace])
-      'cfg.current))
+  [settings]
+  (:namespace settings 'cfg.current))
 
 (defn config-var
   "Get the var to put the profile info into, or use the default
    (which is project)."
   [project]
-  (or (get-in project [:configleaf :var])
+  (or (get-in project [:configsloth :var])
       'project))
 
 (defn merge-profiles
@@ -124,14 +130,14 @@
                                 profiles)]
     (project/merge-profiles project profiles-to-add)))
 
+(defn fix-extension [ext]
+  (if (.startsWith ext ".") ext (str "." ext)))
+
 (defn namespace-to-filepath
   "Given a namespace as a string/symbol, return a string containing the path
-   where we'd look for its source."
-  [ns-name]
-  (str (string/replace ns-name
-                       #"[.-]"
-                       {"." "/", "-" "_"})
-       ".clj"))
+   where we'd look for its source (with the appropriate file extension)."
+  [ns-str ext]
+  (str (string/replace ns-str #"[.-]" {"." "/", "-" "_"}) ext))
 
 (defn sub-project
   "Return a nested subset of the project map. Also get the same nested subset from each value
@@ -146,50 +152,58 @@
         (with-meta (update-in (meta project)
                               [:without-profiles] sub-project keyseq)))))
 
+(defn ext->template [ext]
+  (if-let [tpl (ext-template-map ext)]
+    tpl
+    (do
+      (println "WARNING: No custom :template provided and unknown :file-ext '"
+               ext "'! Using template .clj files! Please fix your :configsloth!")
+      (ext-template-map ".clj"))))
+
 (defn output-config-namespace
   "Write a Clojure file that will set up the config namespace with the project
    in it when it is loaded. Returns the project with the profiles merged."
   [project]
-  (let [ns-name (str (config-namespace project))
-        src-path (or (get-in project [:configleaf :config-source-path])
+  (let [settings (:configsloth project)
+        ns-str (str (config-namespace settings))
+        src-path (or (:config-source-path settings)
                      (first (:source-paths project))
                      "src/")
-        ns-file (io/file src-path
-                         (namespace-to-filepath ns-name))
+        file-ext (fix-extension (:file-ext settings *default-extension*))
+        template (:template settings (ext->template file-ext))
+        ns-file (io/file src-path (namespace-to-filepath ns-str file-ext))
         ns-parent-dir (.getParentFile ns-file)
-        config (if-let [keyseq (get-in project [:configleaf :keyseq])]
+        config (if-let [keyseq (:keyseq settings)]
                  (sub-project project keyseq)
                  project)]
     (if (not (.exists ns-parent-dir))
       (.mkdirs ns-parent-dir))
     (spit ns-file
           (stencil/render-file
-           "templates/configleafns"
-           {:namespace ns-name
+           template
+           {:namespace ns-str
             :var (config-var project)
             :config config
             :config-metadata (select-keys (meta config)
                                           [:without-profiles :included-profiles])}))))
 
 (defn check-gitignore
-  "Check the .gitignore file for the project to see if .configleaf/ is ignored,
+  "Check the .gitignore file for the project to see if .configsloth/ is ignored,
    and warn if it isn't. Also check for the config-namespace source file."
-  [cl-config]
+  [{settings :configsloth}]
   (try
     (let [gitignore-file (io/file ".gitignore")
           gitignore-lines (string/split-lines (slurp gitignore-file))
-          ns-name (config-namespace cl-config)
-          ns-filepath (namespace-to-filepath ns-name)
-          config-ns-re (re-pattern (str "\\Qsrc/" ;; Quote whole thing.
-                                        ns-filepath
-                                        "\\E"))]
-      (when (not (some #(re-matches #"\.configleaf" %) gitignore-lines))
-        (println "Configleaf")
-        (println "  The .configleaf directory does not appear to be present in")
+          ns-str (config-namespace settings)
+          ; characters between \Q and \E are interpreted as literal characters
+          config-ns-re (re-pattern (str "\\Qsrc/" ns-str "\\E"))]
+      (when (not (some #(re-matches #"\.configsloth" %) gitignore-lines))
+        (println "configsloth")
+        (println "  The .configsloth directory does not appear to be present in")
         (println "  .gitignore. You almost certainly want to add it."))
       (when (not (some #(re-matches config-ns-re %) gitignore-lines))
-        (println "Configleaf")
-        (println "  The Configleaf namespace file," (str "src/" ns-filepath)
+        (println "configsloth")
+        (println "  The configsloth namespace file," (str "src/" ns-str)
                  ", does not")
         (println "  appear to be present in .gitignore. You almost certainly")
         (println "  want to add it.")))

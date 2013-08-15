@@ -1,6 +1,8 @@
-(ns configleaf.test.core
-  (:use configleaf.core)
-  (:use [clojure.test]))
+(ns configsloth.test.core
+  (:require [configsloth.core :refer [expand-profile
+                                      fully-expand-profile
+                                      unstickable-profiles]]
+            [clojure.test :refer [deftest is]]))
 
 (deftest expand-profile-test
   (is (= [:a] (expand-profile {:profiles {:a {} :b {}}} :a)))
@@ -20,9 +22,9 @@
 (deftest unstickable-profiles-test
   (is (= #{#{:a :b}}
          (unstickable-profiles {:profiles {:a {} :b {} :c {} :d [:a :b]}
-                                :configleaf {:never-sticky [:d]}})))
+                                :configsloth {:never-sticky [:d]}})))
   (is (= #{#{:a :c} #{:b :d}}
          (unstickable-profiles {:profiles {:a {} :b {} :c {} :d {}
                                            :ac [:a :c] :bd [:b :d]}
-                                :configleaf {:never-sticky [:ac :bd]}}))))
+                                :configsloth {:never-sticky [:ac :bd]}}))))
 

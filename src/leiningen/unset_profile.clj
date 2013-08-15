@@ -1,7 +1,9 @@
 (ns leiningen.unset-profile
-  (:use configleaf.core)
   (:require [clojure.java.io :as io]
-            [clojure.set :as set]))
+            [clojure.set :as set]
+            [configsloth.core :refer [save-current-profiles
+                                      get-current-profiles
+                                      print-current-sticky-profiles]]))
 
 (defn unset-profile
   "Set the profile(s) specified to be inactive. --all to remove all."
