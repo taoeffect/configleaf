@@ -319,12 +319,13 @@ another plugin (or leiningen itself) wants to use those task names.
   * Added :file-ext option to specify config file extension.
   * Added :template option to allow the option of providing your own mustache template.
   * Added :middleware option to optionally transform the project map.
-  * Added templates for .cljx and .cljs :file-ext. Updated .clj template.
+  * Added templates for .cljx and .cljs :file-ext.
+  * Updated .clj template to use 'defonce' now.
+  * Templates now store config map in an atom to allow for updates within the project.
   * dissoc :checkout-deps-shares from the project map to fix an incompatibility
     with Leiningen 2.3.0 that caused an "Unreadable form" RuntimeException.
   * Included @ninjudd's PR to configleaf to add :keyseq and :var options
-  * Now config is stored in an atom to allow for updates within the project.
-  * *.clj template uses 'defonce' now.
+  * Restructured and updated text in README.md
 
 * Version 0.4.7 (By: [Justin Balthrop / @ninjudd](https://github.com/ninjudd))
   * remove unused v1 legacy methods
