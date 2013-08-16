@@ -1,5 +1,5 @@
-(ns configsloth.test.core
-  (:require [configsloth.core :refer [expand-profile
+(ns slothcfg.test.core
+  (:require [slothcfg.core :refer [expand-profile
                                       fully-expand-profile
                                       unstickable-profiles]]
             [clojure.test :refer [deftest is]]))
@@ -22,9 +22,9 @@
 (deftest unstickable-profiles-test
   (is (= #{#{:a :b}}
          (unstickable-profiles {:profiles {:a {} :b {} :c {} :d [:a :b]}
-                                :configsloth {:never-sticky [:d]}})))
+                                :slothcfg {:never-sticky [:d]}})))
   (is (= #{#{:a :c} #{:b :d}}
          (unstickable-profiles {:profiles {:a {} :b {} :c {} :d {}
                                            :ac [:a :c] :bd [:b :d]}
-                                :configsloth {:never-sticky [:ac :bd]}}))))
+                                :slothcfg {:never-sticky [:ac :bd]}}))))
 

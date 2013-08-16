@@ -1,7 +1,7 @@
 (ns leiningen.unset-profile
   (:require [clojure.java.io :as io]
             [clojure.set :as set]
-            [configsloth.core :refer [save-current-profiles
+            [slothcfg.core :refer [save-current-profiles
                                       get-current-profiles
                                       print-current-sticky-profiles]]))
 

@@ -1,8 +1,8 @@
 (ns leiningen.set-profile
   (:require [clojure.set :as set]
-            [configsloth.core :refer [get-current-profiles unstickable-profiles
-                                      fully-expand-profile save-current-profiles
-                                      print-current-sticky-profiles]]))
+            [slothcfg.core :refer [get-current-profiles unstickable-profiles
+                                   fully-expand-profile save-current-profiles
+                                   print-current-sticky-profiles]]))
 
 (defn set-profile
   "Set the profile(s) specified to be active."

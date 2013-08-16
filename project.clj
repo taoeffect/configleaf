@@ -1,6 +1,5 @@
-(defproject configsloth "1.0.0"
+(defproject slothcfg "1.0.0"
   :description "Persistent and buildable profiles in Leiningen."
-  :plugins [[lein-set-version "0.3.0"]]
   :dependencies [[stencil "0.3.2"]]
   :eval-in-leiningen true
   :profiles {:test {:params {:test 1}
@@ -10,10 +9,10 @@
              :b {}
              :c {}
              :d [:a :b]}
-  :configsloth {:never-sticky [:d]}
+  :slothcfg {:never-sticky [:d] :verbose true}
   ; leave this at the bottom of the file because Sublime's Clojure
   ; syntax highlighting doesn't properly handle quoted quotes within
-  ; a regex expression.
+  ; a regex expression. lein-set-version is specified in profiles.clj
   :set-version {:updates
                 [{:path "README.md"
-                  :search-regex #"configsloth \"\d+\.\d+\.\d+\""}]})
+                  :search-regex #"slothcfg \"\d+\.\d+\.\w+?\""}]})

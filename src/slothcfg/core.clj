@@ -1,16 +1,19 @@
-(ns configsloth.core
+(ns slothcfg.core
   (:require [clojure.java.io :as io]
             [clojure.string :as string]
             [stencil.core :as stencil]
-            [leiningen.core.project :as project])
+            [leiningen.core.project :as project]
+            leiningen.core.main
+            leiningen.show-profiles
+            [robert.hooke :refer [add-hook]])
   (:import java.util.Properties))
 
 (def ^:dynamic *default-extension* ".clj")
 
 (def ext-template-map
-  {".clj" "templates/configsloth-clj"
-   ".cljx" "templates/configsloth-cljx"
-   ".cljs" "templates/configsloth-cljs"})
+  {".clj" "templates/slothcfg-clj"
+   ".cljx" "templates/slothcfg-cljx"
+   ".cljs" "templates/slothcfg-cljs"})
 
 ;;
 ;; Functions that provide functionality independent of any one build tool.
@@ -19,10 +22,10 @@
 (defn read-current-profiles
   "Read the current profiles from the config file for the project
    at the given path. For example, if the argument is \"/home/david\", reads
-   \"/home/david/.configsloth/current\". .configsloth/current should contain a
+   \"/home/david/.slothcfg/current\". .slothcfg/current should contain a
    single form that lists the currently active profiles."
   [config-store-path]
-  (let [config-file (io/file config-store-path ".configsloth/current")]
+  (let [config-file (io/file config-store-path ".slothcfg/current")]
     (when (and (.exists config-file)
                (.isFile config-file))
       (binding [*read-eval* false]
@@ -32,8 +35,8 @@
   "Store the given profiles as the new current profiles for the project
    at the given path."
   [config-store-path current-profiles]
-  (let [config-dir (io/file config-store-path ".configsloth")
-        config-file (io/file config-store-path ".configsloth/current")]
+  (let [config-dir (io/file config-store-path ".slothcfg")
+        config-file (io/file config-store-path ".slothcfg/current")]
     (if (not (and (.exists config-dir)
                   (.isDirectory config-dir)))
       (.mkdir config-dir))
@@ -82,13 +85,13 @@
 
 (defn unstickable-profiles
   "Return all of the sets of the name keys of basic profiles that
-   cannot be made sticky according to the :configsloth configuration
+   cannot be made sticky according to the :slothcfg configuration
    key. Composite profiles are expanded away. Returns a set of the
    sets of basic keys that cannot be set sticky in combination."
    [project]
   (let [unstickable-profiles (into #{}
                                    (get-in project
-                                           [:configsloth :never-sticky]))]
+                                           [:slothcfg :never-sticky]))]
     (into #{} (map (partial fully-expand-profile project)
                    unstickable-profiles))))
 
@@ -116,7 +119,7 @@
   "Get the var to put the profile info into, or use the default
    (which is project)."
   [project]
-  (or (get-in project [:configsloth :var])
+  (or (get-in project [:slothcfg :var])
       'project))
 
 (defn merge-profiles
@@ -157,14 +160,14 @@
     tpl
     (do
       (println "WARNING: No custom :template provided and unknown :file-ext '"
-               ext "'! Using template .clj files! Please fix your :configsloth!")
-      (ext-template-map ".clj"))))
+               ext "'! Assuming '" *default-extension* "' Please fix your :slothcfg!")
+      (ext-template-map *default-extension*))))
 
 (defn output-config-namespace
   "Write a Clojure file that will set up the config namespace with the project
    in it when it is loaded. Returns the project with the profiles merged."
   [project]
-  (let [settings (:configsloth project)
+  (let [settings (:slothcfg project)
         ns-str (str (config-namespace settings))
         src-path (or (:config-source-path settings)
                      (first (:source-paths project))
@@ -175,7 +178,14 @@
         ns-parent-dir (.getParentFile ns-file)
         config (if-let [keyseq (:keyseq settings)]
                  (sub-project project keyseq)
-                 project)]
+                 project)
+        config (if-let [f (:middleware settings)]
+                 ((eval f) config)
+                 config)
+        ; fix a bug caused by an unreadable form due to Leiningen 2.3.0:
+        ; :compile-path #<classpath$checkout_deps_paths leiningen.core.classpath$checkout_deps_paths@41dee0d7>
+        config (dissoc config :checkout-deps-shares)
+        ]
     (if (not (.exists ns-parent-dir))
       (.mkdirs ns-parent-dir))
     (spit ns-file
@@ -188,22 +198,22 @@
                                           [:without-profiles :included-profiles])}))))
 
 (defn check-gitignore
-  "Check the .gitignore file for the project to see if .configsloth/ is ignored,
+  "Check the .gitignore file for the project to see if .slothcfg/ is ignored,
    and warn if it isn't. Also check for the config-namespace source file."
-  [{settings :configsloth}]
+  [{settings :slothcfg}]
   (try
     (let [gitignore-file (io/file ".gitignore")
           gitignore-lines (string/split-lines (slurp gitignore-file))
           ns-str (config-namespace settings)
           ; characters between \Q and \E are interpreted as literal characters
           config-ns-re (re-pattern (str "\\Qsrc/" ns-str "\\E"))]
-      (when (not (some #(re-matches #"\.configsloth" %) gitignore-lines))
-        (println "configsloth")
-        (println "  The .configsloth directory does not appear to be present in")
+      (when (not (some #(re-matches #"\.slothcfg" %) gitignore-lines))
+        (println "slothcfg")
+        (println "  The .slothcfg directory does not appear to be present in")
         (println "  .gitignore. You almost certainly want to add it."))
       (when (not (some #(re-matches config-ns-re %) gitignore-lines))
-        (println "configsloth")
-        (println "  The configsloth namespace file," (str "src/" ns-str)
+        (println "slothcfg")
+        (println "  The slothcfg namespace file," (str "src/" ns-str)
                  ", does not")
         (println "  appear to be present in .gitignore. You almost certainly")
         (println "  want to add it.")))
