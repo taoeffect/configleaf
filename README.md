@@ -27,7 +27,7 @@ slothcfg for Leiningen 2 fills in the missing features in Leiningen 2's profile 
 
 + Makes the `project.clj` file available to your code at runtime so that you can use
   it as a config file!
-+ Persistent ("sticky") profiles, which can be set and remain in effect until unset.
++ Build profiles for Leiningen that can be set and remain in effect until unset.
 + Built-in templates to create .cljs, .cljx or .cljs config files.
 
 ## Installation<a name="Installation"/>
@@ -78,10 +78,10 @@ Current sticky profiles:
 Here, slothcfg has modified the built in `profiles` task to also
 print out the currently active sticky profiles. In this case, since
 none have been set, there are no current sticky profiles. We can set a
-few profiles using the `set-profile` task:
+few profiles using `slothcfg set`:
 
 ```
-[prompt]$ lein set-profile test stage
+[prompt]$ lein slothcfg set test stage
 Warning: Unknown profile :stage is being set active.
 Current sticky profiles: #{:test :stage}
 ```
@@ -91,18 +91,18 @@ Now two profiles have been set to active, `:test` and
 `:stage`, as it isn't present in the project map. But it has still set
 the profile to stick.
 
-If we set `:stage` by mistake, we can unset that profile using the `unset-profile` command:
+If we set `:stage` by mistake, we can unset that profile using the `slothcfg unset` command:
 
 ```
-[prompt]$ lein unset-profile stage
+[prompt]$ lein slothcfg unset stage
 Current sticky profiles: #{:test}
 ```
 
 If we wish to remove all sticky profiles at once, we can simply call
-`unset-profile` with the `--all` flag:
+`slothcfg unset` with the `--all` flag:
 
 ```
-[prompt]$ lein unset-profile --all
+[prompt]$ lein slothcfg unset --all
 All profiles unset.
 [prompt]$ lein profiles
 debug
@@ -244,8 +244,8 @@ profile. At the end, you can see that there were no sticky profiles in
 effect. If we add the `prod` profile as a sticky profile:
 
 ```
-[prompt]$ lein set-profile prod
-Performing task set-profile with profiles (:dev :user :default)
+[prompt]$ lein slothcfg set prod
+Performing task slothcfg with profiles (:dev :user :default)
 Current sticky profiles: #{:prod}
 [prompt]$ lein with-profile test profiles
 Performing task with-profile with profiles (:dev :user :default)
@@ -274,13 +274,13 @@ Since all of this extra output is controled by the `:verbose` key in the `:sloth
 Then
 
 ```
-[prompt]$ lein set-profile verbose-slothcfg
+[prompt]$ lein slothcfg set verbose-slothcfg
 ```
 
 will make it so that you can switch slothcfg from verbose output to quiet output by setting or unsetting the `verbose-slothcfg` profile.
 
 ```
-[prompt]$ lein set-profile verbose-slothcfg
+[prompt]$ lein slothcfg set verbose-slothcfg
 Current sticky profiles: #{:prod :verbose-slothcfg}
 [prompt]$ lein jar
 Performing task jar with profiles (:dev :user :default :prod :verbose-slothcfg)
@@ -304,16 +304,22 @@ of [Justin's pull request](https://github.com/davidsantiago/configleaf/pull/1)).
 2. Search your entire project and replace ever occurrence of "configleaf" with "slothcfg".
 3. Rename the invisible `.configleaf` directory at the root of your project to `.slothcfg`
 
+Remember that the `set-profile` and `unset-profile` tasks are now replaced by
+`slothcfg set` and `slothcfg unset`. This was done to future-proof slothcfg in case
+another plugin (or leiningen itself) wants to use those task names.
+
 ## News<a name="News"/>
 
 * Version 1.0.0 (By: [Greg Slepak / @taoeffect](https://github.com/taoeffect))
   * Renamed project to slothcfg so that users can pull new features from Clojars.
   * Removed all use of :use ([it's bad, mmm'k?](http://grokbase.com/t/gg/clojure/137qrc7xmr/can-we-please-deprecate-the-use-directive/nested/))
   * Removed robert-hooke dependency because it comes with leiningen 2.
+  * Consolidated the `set-profile` and `unset-profile` tasks under a generic `slothcfg`
+    task to future-proof slothcfg.
   * Added :file-ext option to specify config file extension.
   * Added :template option to allow the option of providing your own mustache template.
   * Added :middleware option to optionally transform the project map.
-  * Added template for .cljx :file-ext
+  * Added templates for .cljx and .cljs :file-ext. Updated .clj template.
   * dissoc :checkout-deps-shares from the project map to fix an incompatibility
     with Leiningen 2.3.0 that caused an "Unreadable form" RuntimeException.
   * Included @ninjudd's PR to configleaf to add :keyseq and :var options

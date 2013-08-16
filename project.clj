@@ -1,5 +1,5 @@
 (defproject slothcfg "1.0.0"
-  :description "Persistent and buildable profiles in Leiningen."
+  :description "Build configurations for Leiningen."
   :url "https://github.com/taoeffect/slothcfg"
   :license {:name "Eclipse Public License - v 1.0"
             :url "http://www.eclipse.org/legal/epl-v10.html"
