@@ -35,7 +35,7 @@ slothcfg for Leiningen 2 fills in the missing features in Leiningen 2's profile 
 To install slothcfg, add the following to your project map as a plugin:
 
 ```
-[slothcfg "1.0.0"]
+[slothcfg "1.0.1"]
 ```
 
 That is all you need. But you will probably also want to add two
@@ -310,7 +310,7 @@ another plugin (or leiningen itself) wants to use those task names.
 
 ## News<a name="News"/>
 
-* Version 1.0.0 (By: [Greg Slepak / @taoeffect](https://github.com/taoeffect))
+* Version 1.0.1 (By: [Greg Slepak / @taoeffect](https://github.com/taoeffect))
   * Renamed project to slothcfg so that users can pull new features from Clojars.
   * Removed all use of :use ([it's bad, mmm'k?](http://grokbase.com/t/gg/clojure/137qrc7xmr/can-we-please-deprecate-the-use-directive/nested/))
   * Removed robert-hooke dependency because it comes with leiningen 2.

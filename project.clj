@@ -1,4 +1,4 @@
-(defproject slothcfg "1.0.0"
+(defproject slothcfg "1.0.1"
   :description "Build configurations for Leiningen."
   :url "https://github.com/taoeffect/slothcfg"
   :license {:name "Eclipse Public License - v 1.0"
@@ -22,16 +22,13 @@
   
   :pom-addition [:developers
                  ; created slothcfg fork of configleaf
-                 [:developer {:id "taoeffect"} 
-                  [:name "Greg Slepak"]
+                 [[:name "Greg Slepak"]
                   [:url "https://twitter.com/taoeffect"]]
                  ; author of PR from which slothcfg was forked
-                 [:developer {:id "ninjudd"}
-                  [:name "Justin Balthrop"]
+                 [[:name "Justin Balthrop"]
                   [:url "https://github.com/ninjudd"]]
                  ; original author of configleaf
-                 [:developer {:id "davidsantiago"}
-                  [:name "David Santiago"]
+                 [[:name "David Santiago"]
                   [:url "https://github.com/davidsantiago"]]]
   
   ; leave this at the bottom of the file because Sublime's Clojure
