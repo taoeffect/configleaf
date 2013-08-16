@@ -19,18 +19,7 @@
   :slothcfg {:never-sticky [:d] :verbose true}
   
   :deploy-branches ["master"]
-  
-  :pom-addition [:developers
-                 ; created slothcfg fork of configleaf
-                 [[:name "Greg Slepak"]
-                  [:url "https://twitter.com/taoeffect"]]
-                 ; author of PR from which slothcfg was forked
-                 [[:name "Justin Balthrop"]
-                  [:url "https://github.com/ninjudd"]]
-                 ; original author of configleaf
-                 [[:name "David Santiago"]
-                  [:url "https://github.com/davidsantiago"]]]
-  
+    
   ; leave this at the bottom of the file because Sublime's Clojure
   ; syntax highlighting doesn't properly handle quoted quotes within
   ; a regex expression. lein-set-version is specified in profiles.clj
