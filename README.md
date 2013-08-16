@@ -300,7 +300,7 @@ of [Justin's pull request](https://github.com/davidsantiago/configleaf/pull/1)).
 ### Upgrading from configleaf<a name="Upgrading"/>
 
 1. In your project.clj, remove `configleaf.hooks` from `:hooks` and change the configleaf
-   entry in your `:plugins` to match what's listed in the [Installation](#Installation) section below.
+   entry in your `:plugins` to match what's listed in the [Installation](#Installation) section.
 2. Search your entire project and replace ever occurrence of "configleaf" with "slothcfg".
 3. Rename the invisible `.configleaf` directory at the root of your project to `.slothcfg`
 
